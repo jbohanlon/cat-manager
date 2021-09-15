@@ -36,5 +36,7 @@ module.exports = {
     'no-plusplus': ['error', { 'allowForLoopAfterthoughts': true }],
     'no-param-reassign': ['error', { 'props': false }],
     'jest/expect-expect': ['error', { 'assertFunctionNames': ['expect', 'request.**.expect'] }],
+    // NestJS examples really seem to like named exports everywhere, so we'll disable the prefer-default-export rule
+    'import/prefer-default-export': 'off'
   }
 };

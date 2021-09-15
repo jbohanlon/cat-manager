@@ -24,9 +24,17 @@
     "@nestjs/core": "^8.0.0",
     "@nestjs/platform-express": "^8.0.0",
     "ajv": "^6.12.6",
+    "class-transformer": "^0.4.0",
+    "class-validator": "^0.13.1",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
-    "rxjs": "^7.2.0"
+    "rxjs": "^7.2.0",
+    "sqlite3": "^5.0.2",
+    "typeorm": "^0.2.37",
+    "uuid": ">=7"
+  },
+  "dependenciesComments": {
+    "uuid": "We're not explicitly using uuid, but typeorm includes it.  We want to use a version > 7 because earlier versions are deprecated."
   },
   "devDependencies": {
     "@nestjs/cli": "^8.0.0",
