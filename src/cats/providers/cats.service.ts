@@ -13,4 +13,10 @@ export class CatsService {
   async save(cat: Cat) {
     this.catsRepository.save(cat);
   }
+
+  async findRandomId(): Promise<number> {
+    // Note: The RANDOM() function only works with sqlite
+    const builtQuery = this.catsRepository.createQueryBuilder().select(['id']).orderBy('RANDOM()');
+    return (await builtQuery.getRawOne()).id;
+  }
 }

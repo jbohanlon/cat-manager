@@ -1,5 +1,5 @@
 import {
-  Body, Controller, Get, Post,
+  Body, Controller, Get, Post, Redirect,
 } from '@nestjs/common';
 import { CreateCatDto } from './dto/create-cat.dto';
 import { Cat } from './entities/cat.entity';
@@ -12,6 +12,13 @@ export class CatsController {
   @Get()
   async findAll(): Promise<Cat[]> {
     return this.catsService.findAll();
+  }
+
+  @Get('random')
+  @Redirect()
+  async redirectToRandomCat() {
+    const id = await this.catsService.findRandomId();
+    return { url: `/cats/${id}`, statusCode: 302 };
   }
 
   @Post()
