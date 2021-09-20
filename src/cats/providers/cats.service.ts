@@ -10,8 +10,20 @@ export class CatsService {
     return this.catsRepository.find();
   }
 
-  async save(cat: Cat) {
-    this.catsRepository.save(cat);
+  async find(id: number): Promise<Cat> {
+    return this.catsRepository.findOne(id);
+  }
+
+  async save(cat: Cat): Promise<Cat> {
+    return this.catsRepository.save(cat);
+  }
+
+  async delete(id: number) {
+    this.catsRepository.delete(id);
+  }
+
+  async deleteAll() {
+    this.catsRepository.clear();
   }
 
   async findRandomId(): Promise<number> {

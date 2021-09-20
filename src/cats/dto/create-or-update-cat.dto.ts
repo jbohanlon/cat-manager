@@ -1,24 +1,18 @@
 import { Transform } from 'class-transformer';
-import {
-  IsString, IsInt, IsBoolean, IsNotEmpty,
-} from 'class-validator';
+import { Allow } from 'class-validator';
 
-export class CreateCatDto {
-  @IsString()
-  @IsNotEmpty()
+export class CreateOrUpdateCatDto {
+  @Allow()
   name: string;
 
-  @IsInt()
-  @IsNotEmpty()
+  @Allow()
   @Transform(({ value }) => parseInt(value, 10))
-  age: number;
+  weight: number;
 
-  @IsString()
-  @IsNotEmpty()
+  @Allow()
   breed: string;
 
-  @IsBoolean()
-  @IsNotEmpty()
+  @Allow()
   @Transform(({ value }) => (typeof value === 'boolean' ? value : value === 'true'))
   isFriendly: boolean;
 }

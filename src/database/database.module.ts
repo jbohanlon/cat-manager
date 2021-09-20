@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import * as path from 'path';
-import { Cat } from 'src/cats/entities/cat.entity';
 import { createConnection } from 'typeorm';
+import { Cat } from '../cats/entities/cat.entity';
 
 const databaseConnectionProvider = {
   provide: 'DATABASE_CONNECTION',
