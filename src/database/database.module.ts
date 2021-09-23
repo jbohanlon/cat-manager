@@ -14,7 +14,7 @@ const databaseConnectionProvider = {
 
     return createConnection({
       type: 'sqlite',
-      database: `${path.resolve(__dirname, '..', '..', 'db', `${nodeEnv}.sqlite3`)}`,
+      database: nodeEnv === 'test' ? ':memory:' : `${path.resolve(__dirname, '..', '..', 'db', `${nodeEnv}.sqlite3`)}`,
       entities: [Cat],
       synchronize: nodeEnv !== 'production',
     });
