@@ -4,31 +4,37 @@ import { Cat } from '../entities/cat.entity';
 
 @Injectable()
 export class CatsService {
-  constructor(@Inject('CAT_REPOSITORY') private catsRepository: Repository<Cat>) {}
+  constructor(@Inject('CAT_REPOSITORY') private catRepository: Repository<Cat>) {}
 
   async findAll(): Promise<Cat[]> {
-    return this.catsRepository.find();
+    return this.catRepository.find();
   }
 
   async find(id: number): Promise<Cat> {
-    return this.catsRepository.findOne(id);
+    return this.catRepository.findOne(id);
+  }
+
+  async exists(id: number): Promise<boolean> {
+    return (await this.find(id)) !== undefined;
   }
 
   async save(cat: Cat): Promise<Cat> {
-    return this.catsRepository.save(cat);
+    return this.catRepository.save(cat);
   }
 
   async delete(id: number) {
-    this.catsRepository.delete(id);
+    this.catRepository.delete(id);
   }
 
   async deleteAll() {
-    this.catsRepository.clear();
+    this.catRepository.clear();
   }
 
   async findRandomId(): Promise<number> {
     // Note: The RANDOM() function only works with sqlite
-    const builtQuery = this.catsRepository.createQueryBuilder().select(['id']).orderBy('RANDOM()');
-    return (await builtQuery.getRawOne()).id;
+    const builtQuery = this.catRepository.createQueryBuilder().select(['id']).orderBy('RANDOM()');
+    const randomId = (await builtQuery.getRawOne()).id;
+    console.log(`got random id: ${randomId}`);
+    return randomId;
   }
 }

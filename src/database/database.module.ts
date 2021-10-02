@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import * as path from 'path';
 import { createConnection } from 'typeorm';
 import { Cat } from '../cats/entities/cat.entity';
+import { User } from '../users/entities/user.entity';
 
 const databaseConnectionProvider = {
   provide: 'DATABASE_CONNECTION',
@@ -14,8 +15,8 @@ const databaseConnectionProvider = {
 
     return createConnection({
       type: 'sqlite',
-      database: nodeEnv === 'test' ? ':memory:' : `${path.resolve(__dirname, '..', '..', 'db', `${nodeEnv}.sqlite3`)}`,
-      entities: [Cat],
+      database: `${path.resolve(__dirname, '..', '..', 'db', `${nodeEnv}.sqlite3`)}`,
+      entities: [Cat, User],
       synchronize: nodeEnv !== 'production',
     });
   },
