@@ -34,7 +34,6 @@ export class CatsService {
     // Note: The RANDOM() function only works with sqlite
     const builtQuery = this.catRepository.createQueryBuilder().select(['id']).orderBy('RANDOM()');
     const randomId = (await builtQuery.getRawOne()).id;
-    console.log(`got random id: ${randomId}`);
     return randomId;
   }
 }

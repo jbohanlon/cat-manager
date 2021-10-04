@@ -4,7 +4,7 @@ import {
   IsEmail, IsNotEmpty, IsString, Length, MaxLength, validate,
 } from 'class-validator';
 import {
-  BeforeInsert, BeforeUpdate, Column, Entity, ObjectIdColumn, PrimaryGeneratedColumn,
+  BeforeInsert, BeforeUpdate, Column, Entity, Index, ObjectIdColumn, PrimaryGeneratedColumn,
 } from 'typeorm';
 import { InvalidEntityException } from '../../app/exceptions/invalid-entity.exception';
 
@@ -35,6 +35,7 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index({ unique: true })
   @Column({ length: 100 })
   @MaxLength(100)
   @IsEmail()
