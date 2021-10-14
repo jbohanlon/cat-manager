@@ -4,9 +4,11 @@ import {
   IsEmail, IsNotEmpty, IsString, Length, MaxLength, validate,
 } from 'class-validator';
 import {
-  BeforeInsert, BeforeUpdate, Column, Entity, Index, ObjectIdColumn, PrimaryGeneratedColumn,
+  BeforeInsert, BeforeUpdate, Column, Entity, Index, ObjectIdColumn, OneToMany, PrimaryGeneratedColumn,
 } from 'typeorm';
 import { InvalidEntityException } from '../../app/exceptions/invalid-entity.exception';
+// eslint-disable-next-line import/no-cycle
+import { Cat } from '../../cats/entities/cat.entity';
 
 export interface UserOptions {
   id?: number,
@@ -53,6 +55,9 @@ export class User {
   @IsBoolean()
   @IsNotEmpty()
   isAdmin: boolean;
+
+  @OneToMany(() => Cat, (cat) => cat.user)
+  cats: Promise<Cat[]>;
 
   toPojo(): object {
     return { ...this };

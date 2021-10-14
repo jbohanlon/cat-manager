@@ -86,6 +86,7 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
-    "restoreMocks": true
+    "restoreMocks": true,
+    "maxWorkers": 1
   }
 }

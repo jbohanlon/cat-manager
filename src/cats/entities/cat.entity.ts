@@ -2,9 +2,11 @@ import {
   IsBoolean, IsInt, IsNotEmpty, IsPositive, IsString, MaxLength, validate,
 } from 'class-validator';
 import {
-  Entity, Column, PrimaryGeneratedColumn, ObjectIdColumn, BeforeInsert, BeforeUpdate,
+  Entity, Column, PrimaryGeneratedColumn, ObjectIdColumn, BeforeInsert, BeforeUpdate, ManyToOne,
 } from 'typeorm';
 import { InvalidEntityException } from '../../app/exceptions/invalid-entity.exception';
+// eslint-disable-next-line import/no-cycle
+import { User } from '../../users/entities/user.entity';
 
 interface CatOptions {
   id?: number,
@@ -56,6 +58,9 @@ export class Cat {
   @IsBoolean()
   @IsNotEmpty()
   isFriendly: boolean;
+
+  @ManyToOne(() => User, (user) => user.cats)
+  user: Promise<User>;
 
   toPojo(): object {
     return { ...this };

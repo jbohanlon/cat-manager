@@ -7,7 +7,7 @@ export class CatsService {
   constructor(@Inject('CAT_REPOSITORY') private catRepository: Repository<Cat>) {}
 
   async findAll(): Promise<Cat[]> {
-    return this.catRepository.find();
+    return this.catRepository.find({ order: { id: 'ASC' } });
   }
 
   async find(id: number): Promise<Cat> {

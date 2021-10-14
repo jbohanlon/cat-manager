@@ -1,10 +1,11 @@
 import {
-  Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Patch, Post, Put,
+  Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Patch, Post, Put, UseGuards,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PatchUserDto } from './dto/patch-user.dto';
 import { ReplaceUserDto } from './dto/replace-user.dto';
 import { User } from './entities/user.entity';
+import { AdminGuard } from './guards/admin.guard';
 import { UsersService } from './providers/users.service';
 
 @Controller('users')
@@ -63,6 +64,7 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @UseGuards(AdminGuard)
   @HttpCode(204)
   async delete(@Param('id') id: number): Promise<void> {
     if (!(await this.usersService.exists(id))) {
@@ -73,6 +75,7 @@ export class UsersController {
   }
 
   @Delete()
+  @UseGuards(AdminGuard)
   @HttpCode(204)
   async deleteAll(): Promise<void> {
     this.usersService.deleteAll();

@@ -3,40 +3,23 @@ import { Test } from '@nestjs/testing';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { truncateAndResetAutoIncrement } from '../helpers/repositoryHelpers';
+import { clearAllTables } from '../helpers/repositoryHelpers';
 import { AppModule } from '../../src/app/app.module';
 import { User } from '../../src/users/entities/user.entity';
 import { UsersService } from '../../src/users/providers/users.service';
 import { sampleEncryptedPassword, samplePassword, sampleSalt } from '../helpers/bcryptHelpers';
+import {
+  createTestAdmin,
+  createTestUser, testAdminEmail, testAdminPassword, testUserEmail, testUserPassword,
+} from '../helpers/authenticationHelpers';
+import { generateSampleUsers } from '../helpers/userHelpers';
 
 describe('Users', () => {
   let app: INestApplication;
   let usersService: UsersService;
   let userRepository: Repository<User>;
-
-  const sourceUserData = [
-    {
-      id: 1, email: 'user1@example.com', password: 'greatpassword1', passwordVerification: 'greatpassword1', isAdmin: false,
-    },
-    {
-      id: 2, email: 'user2@example.com', password: 'greatpassword2', passwordVerification: 'greatpassword2', isAdmin: false,
-    },
-    {
-      id: 3, email: 'admin1@example.com', password: 'greatpassword3', passwordVerification: 'greatpassword3', isAdmin: true,
-    },
-  ];
-
-  const sampleUsers = sourceUserData.map((userData) => {
-    const { password, passwordVerification, ...otherUserFields } = userData;
-    const user = new User(otherUserFields);
-    user.setPassword(password, passwordVerification);
-
-    return user;
-  });
-
-  const sampleUserData = sampleUsers.map((user) => {
-    return user.toPojo();
-  });
+  let testUser: User;
+  let sampleUsers;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -53,8 +36,10 @@ describe('Users', () => {
     await app.close();
   });
 
-  beforeEach(() => {
-    truncateAndResetAutoIncrement(userRepository, 'user');
+  beforeEach(async () => {
+    await clearAllTables(userRepository.manager.connection);
+    testUser = await createTestUser(userRepository);
+    sampleUsers = generateSampleUsers();
   });
 
   describe('GET /users', () => {
@@ -66,10 +51,13 @@ describe('Users', () => {
     });
 
     it('returns the expected status and response body', () => {
+      const expectedResponse = [testUser.toPojo(), ...(sampleUsers.map((u: User) => u.toPojo()))];
+      expectedResponse.sort((a: User, b: User) => a.id - b.id);
       return request(app.getHttpServer())
         .get('/users')
+        .auth(testUserEmail, testUserPassword)
         .expect(HttpStatus.OK)
-        .expect(sampleUserData);
+        .expect(expectedResponse);
     });
   });
 
@@ -82,6 +70,7 @@ describe('Users', () => {
     it('returns the expected user', async () => {
       return request(app.getHttpServer())
         .get(`/users/${user.id}`)
+        .auth(testUserEmail, testUserPassword)
         .expect(HttpStatus.OK)
         .expect(user.toPojo());
     });
@@ -92,16 +81,19 @@ describe('Users', () => {
       jest.spyOn(bcrypt, 'genSaltSync').mockImplementation((_rounds) => sampleSalt);
     });
 
-    it('returns the expected data for the created user', () => {
-      return request(app.getHttpServer())
+    it('returns the expected data for the created user', async () => {
+      const requestTest = request(app.getHttpServer())
         .post('/users')
+        .auth(testUserEmail, testUserPassword)
         .send({
           email: 'sample@example.com', password: samplePassword, passwordVerification: samplePassword, isAdmin: true,
         })
-        .expect(HttpStatus.CREATED)
-        .expect({
-          id: 1, email: 'sample@example.com', encryptedPassword: sampleEncryptedPassword, isAdmin: true,
-        });
+        .expect(HttpStatus.CREATED);
+
+      const response = await requestTest;
+      const responseBody = response.body as User;
+      // Need to await requestTest so that we can do a lookup by email for the successfully created user
+      expect((await usersService.findByEmail('sample@example.com')).toPojo()).toEqual(responseBody);
     });
   });
 
@@ -119,6 +111,7 @@ describe('Users', () => {
     it('updates a user and returns the expected result', () => {
       return request(app.getHttpServer())
         .put(`/users/${user.id}`)
+        .auth(testUserEmail, testUserPassword)
         .send(replacementProperties)
         .expect(HttpStatus.OK)
         .expect({
@@ -139,6 +132,7 @@ describe('Users', () => {
     it('updates a user and returns the expected result', () => {
       return request(app.getHttpServer())
         .patch(`/users/${user.id}`)
+        .auth(testUserEmail, testUserPassword)
         .send(replacementProperties)
         .expect(HttpStatus.OK)
         .expect({ ...user, ...replacementProperties });
@@ -148,34 +142,63 @@ describe('Users', () => {
   describe('DELETE /users/:id', () => {
     let user: User;
     beforeEach(async () => {
+      await createTestAdmin(userRepository);
       user = await usersService.save(sampleUsers[0]);
     });
 
-    it('deletes a user and returns the expected response', async () => {
-      expect((await usersService.findAll())).toHaveLength(1);
+    it('rejects unauthorized requests from non-admins and returns the expected response', async () => {
+      const initialNumUsers = (await usersService.findAll()).length;
+      expect(initialNumUsers > 0).toBe(true);
 
       await request(app.getHttpServer())
         .delete(`/users/${user.id}`)
+        .auth(testUserEmail, testUserPassword)
+        .expect(HttpStatus.FORBIDDEN);
+
+      expect((await usersService.findAll())).toHaveLength(initialNumUsers);
+    });
+
+    it('allows an admin to delete a user and returns the expected response', async () => {
+      const initialNumUsers = (await usersService.findAll()).length;
+      expect(initialNumUsers > 0).toBe(true);
+
+      await request(app.getHttpServer())
+        .delete(`/users/${user.id}`)
+        .auth(testAdminEmail, testAdminPassword)
         .expect(HttpStatus.NO_CONTENT)
         .expect(''); // No response body
 
-      expect((await usersService.findAll())).toHaveLength(0);
+      expect((await usersService.findAll())).toHaveLength(initialNumUsers - 1);
     });
   });
 
   describe('DELETE /users', () => {
     beforeEach(async () => {
+      await createTestAdmin(userRepository);
       const userSavePromises = sampleUsers.map((user) => {
         return usersService.save(user);
       });
       await Promise.all(userSavePromises);
     });
 
-    it('deletes a user and returns the expected response', async () => {
-      expect((await usersService.findAll())).toHaveLength(sampleUsers.length);
+    it('rejects unauthorized requests from non-admins and returns the expected response', async () => {
+      const initialNumUsers = (await usersService.findAll()).length;
+      expect(initialNumUsers > 0).toBe(true);
 
       await request(app.getHttpServer())
         .delete('/users')
+        .auth(testUserEmail, testUserPassword)
+        .expect(HttpStatus.FORBIDDEN);
+
+      expect((await usersService.findAll())).toHaveLength(initialNumUsers);
+    });
+
+    it('allows an admin to delete all users and returns the expected response', async () => {
+      expect((await usersService.findAll()).length > 0).toBe(true);
+
+      await request(app.getHttpServer())
+        .delete('/users')
+        .auth(testAdminEmail, testAdminPassword)
         .expect(HttpStatus.NO_CONTENT)
         .expect(''); // No response body
 

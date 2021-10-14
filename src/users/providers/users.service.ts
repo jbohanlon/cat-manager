@@ -7,7 +7,7 @@ export class UsersService {
   constructor(@Inject('USER_REPOSITORY') private userRepository: Repository<User>) {}
 
   async findAll(): Promise<User[]> {
-    return this.userRepository.find();
+    return this.userRepository.find({ order: { id: 'ASC' } });
   }
 
   async find(id: number): Promise<User> {

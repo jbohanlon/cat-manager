@@ -36,3 +36,5 @@ lerna-debug.log*
 
 # Project ignores
 /db
+/scripts/local/*
+!scripts/local/.keep
