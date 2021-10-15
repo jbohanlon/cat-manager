@@ -26,6 +26,20 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
+  // async create(user: User): Promise<User> {
+  //   if (user.id) {
+  //     throw Error("don't do that!");
+  //   }
+  //   return this.userRepository.save(user);
+  // }
+
+  // async update(user: User): Promise<User> {
+  //   if (!user.id) {
+  //     throw Error("don't do that!");
+  //   }
+  //   return this.userRepository.save(user);
+  // }
+
   async delete(id: number) {
     this.userRepository.delete(id);
   }
