@@ -7,31 +7,40 @@ on:
 jobs:
   ci-core-tests:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['14', '16']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: ${{matrix.node}}
       - run: npm ci
       - name: Run core tests
         run: npm run test
   ci-e2e-tests:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['14', '16']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: ${{matrix.node}}
       - run: npm ci
       - name: Run end-to-end tests
         run: npm run test:e2e
   linting:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['14', '16']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: ${{matrix.node}}
       - run: npm ci
       - name: Run linter
         run: npm run lint
