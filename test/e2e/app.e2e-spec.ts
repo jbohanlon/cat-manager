@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { Repository } from 'typeorm';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { AppModule } from '../../src/app/app.module';
 import { createTestUser, testUserEmail, testUserPassword } from '../helpers/authenticationHelpers';
 import { clearAllTables } from '../helpers/repositoryHelpers';
@@ -19,7 +20,7 @@ describe('AppController (e2e)', () => {
     app = moduleRef.createNestApplication();
     await app.init();
 
-    userRepository = moduleRef.get<Repository<User>>('USER_REPOSITORY');
+    userRepository = moduleRef.get<Repository<User>>(getRepositoryToken(User));
   });
 
   beforeEach(async () => {

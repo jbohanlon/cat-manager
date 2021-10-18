@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { clearAllTables } from '../../../test/helpers/repositoryHelpers';
 import { generateSampleUsers } from '../../../test/helpers/userHelpers';
@@ -20,7 +21,7 @@ describe('UsersService', () => {
     }).compile();
 
     usersService = moduleRef.get<UsersService>(UsersService);
-    userRepository = moduleRef.get<Repository<User>>('USER_REPOSITORY');
+    userRepository = moduleRef.get<Repository<User>>(getRepositoryToken(User));
     app = moduleRef.createNestApplication();
     await app.init();
   });

@@ -2,6 +2,7 @@ import * as request from 'supertest';
 import { Test } from '@nestjs/testing';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { Repository } from 'typeorm';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { CatsService } from '../../src/cats/providers/cats.service';
 import { Cat } from '../../src/cats/entities/cat.entity';
 import { clearAllTables } from '../helpers/repositoryHelpers';
@@ -33,8 +34,8 @@ describe('Cats', () => {
     }).compile();
 
     catsService = moduleRef.get<CatsService>(CatsService);
-    catRepository = moduleRef.get<Repository<Cat>>('CAT_REPOSITORY');
-    userRepository = moduleRef.get<Repository<User>>('USER_REPOSITORY');
+    catRepository = moduleRef.get<Repository<Cat>>(getRepositoryToken(Cat));
+    userRepository = moduleRef.get<Repository<User>>(getRepositoryToken(User));
     app = moduleRef.createNestApplication();
     await app.init();
   });

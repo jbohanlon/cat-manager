@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { clearAllTables } from '../helpers/repositoryHelpers';
 import { AppModule } from '../../src/app/app.module';
 import { User } from '../../src/users/entities/user.entity';
@@ -27,7 +28,7 @@ describe('Users', () => {
     }).compile();
 
     usersService = moduleRef.get<UsersService>(UsersService);
-    userRepository = moduleRef.get<Repository<User>>('USER_REPOSITORY');
+    userRepository = moduleRef.get<Repository<User>>(getRepositoryToken(User));
     app = moduleRef.createNestApplication();
     await app.init();
   });
