@@ -38,3 +38,4 @@ lerna-debug.log*
 /db
 /scripts/local/*
 !scripts/local/.keep
+database.yml

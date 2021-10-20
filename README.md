@@ -3,7 +3,15 @@
 
 An app for managing a vast collection of cats!
 
-## Installation
+## Installation and first-time setup
+
+Clone the repository, enter the repository directory, and then create a new database.yml file from the template source:
+
+```bash
+$ cp config/database.template.yml config/database.yml
+```
+
+Then run:
 
 ```bash
 $ npm install
@@ -52,5 +60,5 @@ import { UsersService } from '../../src/users/providers/users.service';
 
 And here's how you would run that script:
 ```
-npx ts-node ./scripts/local/testing.ts
+NODE_ENV=development npx ts-node ./scripts/local/testing.ts
 ```

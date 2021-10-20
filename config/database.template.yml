@@ -1,0 +1,13 @@
+default: &default
+  type: sqlite
+  synchronize: false # to be safe, default to false
+
+development:
+  <<: *default
+  database: db/development.sqlite3
+  synchronize: true
+
+test:
+  <<: *default
+  database: db/test.sqlite3
+  synchronize: true
