@@ -20,3 +20,9 @@ export const generateSampleUsers = () => {
     return user;
   });
 };
+
+export const userToPojoWithoutPassword = (user: User) => {
+  const pojoUser = { ...user };
+  delete pojoUser.encryptedPassword;
+  return pojoUser;
+};

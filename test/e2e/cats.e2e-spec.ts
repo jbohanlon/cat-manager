@@ -59,8 +59,8 @@ describe('Cats', () => {
     });
 
     it('returns the expected status and response body', () => {
-      const expectedResponse = cats.map((c) => c.toPojo());
-      expectedResponse.sort((a: Cat, b: Cat) => a.id - b.id);
+      const expectedResponse = cats.map((c) => ({ ...c }));
+      expectedResponse.sort((a, b) => a.id - b.id);
       return request(app.getHttpServer())
         .get('/cats')
         .auth(testUserEmail, testUserPassword)
@@ -80,7 +80,7 @@ describe('Cats', () => {
         .get(`/cats/${cat.id}`)
         .auth(testUserEmail, testUserPassword)
         .expect(HttpStatus.OK)
-        .expect(cat.toPojo());
+        .expect({ ...cat });
     });
   });
 

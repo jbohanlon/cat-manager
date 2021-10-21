@@ -1,5 +1,6 @@
 import {
-  Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Patch, Post, Put, UseGuards,
+  Body, ClassSerializerInterceptor, Controller, Delete, Get, HttpCode,
+  HttpException, HttpStatus, Param, Patch, Post, Put, UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PatchUserDto } from './dto/patch-user.dto';
@@ -8,6 +9,7 @@ import { User } from './entities/user.entity';
 import { AdminGuard } from './guards/admin.guard';
 import { UsersService } from './providers/users.service';
 
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}

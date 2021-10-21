@@ -61,8 +61,4 @@ export class Cat {
 
   @ManyToOne(() => User, (user) => user.cats)
   user: Promise<User>;
-
-  toPojo(): object {
-    return { ...this };
-  }
 }

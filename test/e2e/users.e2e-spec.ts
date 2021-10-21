@@ -8,12 +8,12 @@ import { clearAllTables } from '../helpers/repositoryHelpers';
 import { AppModule } from '../../src/app/app.module';
 import { User } from '../../src/users/entities/user.entity';
 import { UsersService } from '../../src/users/providers/users.service';
-import { sampleEncryptedPassword, samplePassword, sampleSalt } from '../helpers/bcryptHelpers';
+import { samplePassword, sampleSalt } from '../helpers/bcryptHelpers';
 import {
   createTestAdmin,
   createTestUser, testAdminEmail, testAdminPassword, testUserEmail, testUserPassword,
 } from '../helpers/authenticationHelpers';
-import { generateSampleUsers } from '../helpers/userHelpers';
+import { generateSampleUsers, userToPojoWithoutPassword } from '../helpers/userHelpers';
 
 describe('Users', () => {
   let app: INestApplication;
@@ -52,8 +52,8 @@ describe('Users', () => {
     });
 
     it('returns the expected status and response body', () => {
-      const expectedResponse = [testUser.toPojo(), ...(sampleUsers.map((u: User) => u.toPojo()))];
-      expectedResponse.sort((a: User, b: User) => a.id - b.id);
+      const expectedResponse = [userToPojoWithoutPassword(testUser), ...(sampleUsers.map((u: User) => userToPojoWithoutPassword(u)))];
+      expectedResponse.sort((a, b) => a.id - b.id);
       return request(app.getHttpServer())
         .get('/users')
         .auth(testUserEmail, testUserPassword)
@@ -73,7 +73,7 @@ describe('Users', () => {
         .get(`/users/${user.id}`)
         .auth(testUserEmail, testUserPassword)
         .expect(HttpStatus.OK)
-        .expect(user.toPojo());
+        .expect(userToPojoWithoutPassword(user));
     });
   });
 
@@ -92,9 +92,9 @@ describe('Users', () => {
         .expect(HttpStatus.CREATED);
 
       const response = await requestTest;
-      const responseBody = response.body as User;
+      const responseBody = userToPojoWithoutPassword(response.body);
       // Need to await requestTest so that we can do a lookup by email for the successfully created user
-      expect((await usersService.findByEmail('sample@example.com')).toPojo()).toEqual(responseBody);
+      expect((userToPojoWithoutPassword(await usersService.findByEmail('sample@example.com')))).toEqual(responseBody);
     });
   });
 
@@ -116,7 +116,7 @@ describe('Users', () => {
         .send(replacementProperties)
         .expect(HttpStatus.OK)
         .expect({
-          email: 'newemail@example.com', encryptedPassword: sampleEncryptedPassword, isAdmin: false, id: user.id,
+          email: 'newemail@example.com', isAdmin: false, id: user.id,
         });
     });
   });
@@ -131,12 +131,14 @@ describe('Users', () => {
     });
 
     it('updates a user and returns the expected result', () => {
+      const expectedResponse = { ...user, ...replacementProperties };
+      delete expectedResponse.encryptedPassword;
       return request(app.getHttpServer())
         .patch(`/users/${user.id}`)
         .auth(testUserEmail, testUserPassword)
         .send(replacementProperties)
         .expect(HttpStatus.OK)
-        .expect({ ...user, ...replacementProperties });
+        .expect(expectedResponse);
     });
   });
 

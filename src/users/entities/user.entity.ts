@@ -1,4 +1,5 @@
 import * as bcrypt from 'bcryptjs';
+import { Exclude } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail, IsNotEmpty, IsString, Length, MaxLength, validate,
@@ -49,6 +50,7 @@ export class User {
   @Length(60, 60)
   @IsString()
   @IsNotEmpty()
+  @Exclude()
   encryptedPassword: string;
 
   @Column()
@@ -58,10 +60,6 @@ export class User {
 
   @OneToMany(() => Cat, (cat) => cat.user)
   cats: Promise<Cat[]>;
-
-  toPojo(): object {
-    return { ...this };
-  }
 
   setPassword(password: string, passwordVerification: string) {
     if (password !== passwordVerification) {
