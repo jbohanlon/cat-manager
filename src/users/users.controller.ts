@@ -1,10 +1,10 @@
+/* eslint-disable class-methods-use-this */
 import {
   Body, ClassSerializerInterceptor, Controller, Delete, Get, HttpCode,
-  HttpException, HttpStatus, Param, Patch, Post, Put, UseGuards, UseInterceptors,
+  HttpException, HttpStatus, Param, Patch, Post, UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PatchUserDto } from './dto/patch-user.dto';
-import { ReplaceUserDto } from './dto/replace-user.dto';
 import { User } from './entities/user.entity';
 import { AdminGuard } from './guards/admin.guard';
 import { UsersService } from './providers/users.service';
@@ -34,24 +34,7 @@ export class UsersController {
     const { password, passwordVerification, ...otherFields } = dto;
     const user: User = new User(otherFields);
     user.setPassword(password, passwordVerification);
-    return this.usersService.save(user);
-  }
-
-  @Put(':id')
-  async replace(@Param('id') id: number, @Body() dto: ReplaceUserDto): Promise<User> {
-    if (!(await this.usersService.exists(id))) {
-      throw new HttpException('Not found', HttpStatus.NOT_FOUND);
-    }
-
-    if (!Object.keys(dto).length) {
-      throw new HttpException('At least one valid property is required for an update.', HttpStatus.BAD_REQUEST);
-    }
-
-    const { password, passwordVerification, ...otherFields } = dto;
-    const user: User = new User(otherFields);
-    user.id = id;
-    user.setPassword(password, passwordVerification);
-    return this.usersService.save(user);
+    return this.usersService.create(user);
   }
 
   @Patch(':id')
@@ -62,7 +45,7 @@ export class UsersController {
     if (password) {
       user.setPassword(password, passwordVerification);
     }
-    return this.usersService.save(user);
+    return this.usersService.update(user);
   }
 
   @Delete(':id')

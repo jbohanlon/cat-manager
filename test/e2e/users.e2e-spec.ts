@@ -13,14 +13,14 @@ import {
   createTestAdmin,
   createTestUser, testAdminEmail, testAdminPassword, testUserEmail, testUserPassword,
 } from '../helpers/authenticationHelpers';
-import { generateSampleUsers, userToPojoWithoutPassword } from '../helpers/userHelpers';
+import { buildSampleUsers, userToPojoWithoutPassword } from '../helpers/userHelpers';
 
 describe('Users', () => {
   let app: INestApplication;
   let usersService: UsersService;
   let userRepository: Repository<User>;
   let testUser: User;
-  let sampleUsers;
+  let sampleUsers: User[];
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -39,14 +39,14 @@ describe('Users', () => {
 
   beforeEach(async () => {
     await clearAllTables(userRepository.manager.connection);
-    testUser = await createTestUser(userRepository);
-    sampleUsers = generateSampleUsers();
+    testUser = await createTestUser(usersService);
+    sampleUsers = buildSampleUsers();
   });
 
   describe('GET /users', () => {
     beforeEach(async () => {
       const userSavePromises = sampleUsers.map((user) => {
-        return usersService.save(user);
+        return usersService.create(user);
       });
       await Promise.all(userSavePromises);
     });
@@ -65,7 +65,7 @@ describe('Users', () => {
   describe('GET /users/:id', () => {
     let user: User;
     beforeEach(async () => {
-      user = await usersService.save(sampleUsers[0]);
+      user = await usersService.create(sampleUsers[0]);
     });
 
     it('returns the expected user', async () => {
@@ -98,36 +98,13 @@ describe('Users', () => {
     });
   });
 
-  describe('PUT /users/:id', () => {
-    let user: User;
-    const replacementProperties = {
-      email: 'newemail@example.com', password: samplePassword, passwordVerification: samplePassword, isAdmin: false,
-    };
-
-    beforeEach(async () => {
-      user = await usersService.save(sampleUsers[0]);
-      jest.spyOn(bcrypt, 'genSaltSync').mockImplementation((_rounds) => sampleSalt);
-    });
-
-    it('updates a user and returns the expected result', () => {
-      return request(app.getHttpServer())
-        .put(`/users/${user.id}`)
-        .auth(testUserEmail, testUserPassword)
-        .send(replacementProperties)
-        .expect(HttpStatus.OK)
-        .expect({
-          email: 'newemail@example.com', isAdmin: false, id: user.id,
-        });
-    });
-  });
-
   describe('PATCH /users/:id', () => {
     let user: User;
     const replacementProperties = {
       email: 'ichangedmyemail@example.com',
     };
     beforeEach(async () => {
-      user = await usersService.save(sampleUsers[0]);
+      user = await usersService.create(sampleUsers[0]);
     });
 
     it('updates a user and returns the expected result', () => {
@@ -145,8 +122,8 @@ describe('Users', () => {
   describe('DELETE /users/:id', () => {
     let user: User;
     beforeEach(async () => {
-      await createTestAdmin(userRepository);
-      user = await usersService.save(sampleUsers[0]);
+      await createTestAdmin(usersService);
+      user = await usersService.create(sampleUsers[0]);
     });
 
     it('rejects unauthorized requests from non-admins and returns the expected response', async () => {
@@ -177,9 +154,9 @@ describe('Users', () => {
 
   describe('DELETE /users', () => {
     beforeEach(async () => {
-      await createTestAdmin(userRepository);
+      await createTestAdmin(usersService);
       const userSavePromises = sampleUsers.map((user) => {
-        return usersService.save(user);
+        return usersService.create(user);
       });
       await Promise.all(userSavePromises);
     });

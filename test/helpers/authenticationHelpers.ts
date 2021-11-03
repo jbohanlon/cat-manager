@@ -1,5 +1,5 @@
-import { Repository } from 'typeorm';
 import { User } from '../../src/users/entities/user.entity';
+import { UsersService } from '../../src/users/providers/users.service';
 
 export const testUserEmail = 'user@example.com';
 export const testUserPassword = 'userpassword';
@@ -7,14 +7,14 @@ export const testUserPassword = 'userpassword';
 export const testAdminEmail = 'admin@example.com';
 export const testAdminPassword = 'adminpassword';
 
-export const createTestUser = async (userRespository: Repository<User>) => {
+export const createTestUser = async (usersService: UsersService) => {
   const user = new User({ email: testUserEmail, isAdmin: false });
   user.setPassword(testUserPassword, testUserPassword);
-  return userRespository.save(user);
+  return usersService.create(user);
 };
 
-export const createTestAdmin = async (userRespository: Repository<User>) => {
+export const createTestAdmin = async (usersService: UsersService) => {
   const user = new User({ email: testAdminEmail, isAdmin: true });
   user.setPassword(testAdminPassword, testAdminPassword);
-  return userRespository.save(user);
+  return usersService.create(user);
 };

@@ -1,6 +1,7 @@
 import {
-  Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Patch, Post, Put, Redirect,
+  Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Patch, Post, Redirect, Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { CreateCatDto } from './dto/create-cat.dto';
 import { UpdateCatDto } from './dto/update-cat.dto';
 import { Cat } from './entities/cat.entity';
@@ -33,33 +34,20 @@ export class CatsController {
   }
 
   @Post()
-  async create(@Body() dto: CreateCatDto): Promise<Cat> {
+  async create(@Body() dto: CreateCatDto, @Req() req: Request): Promise<Cat> {
     const cat: Cat = new Cat();
     Object.assign(cat, dto);
-    return this.catsService.save(cat);
-  }
-
-  @Put(':id')
-  async replace(@Param('id') id: number, @Body() dto: UpdateCatDto): Promise<Cat> {
-    if (!(await this.catsService.exists(id))) {
-      throw new HttpException('Not found', HttpStatus.NOT_FOUND);
-    }
-
-    if (!Object.keys(dto).length) {
-      throw new HttpException('At least one valid property is required for an update.', HttpStatus.BAD_REQUEST);
-    }
-
-    const cat: Cat = new Cat();
-    Object.assign(cat, dto, { id });
-    await this.catsService.save(cat);
-    return this.catsService.find(id);
+    cat.user = (req as any).user;
+    await this.catsService.create(cat);
+    delete cat.user; // We don't want to return the user in the response
+    return cat;
   }
 
   @Patch(':id')
   async patch(@Param('id') id: number, @Body() dto: UpdateCatDto): Promise<Cat> {
     const cat: Cat = await this.find(id);
     Object.assign(cat, dto);
-    return this.catsService.save(cat);
+    return this.catsService.update(cat);
   }
 
   @Delete(':id')
