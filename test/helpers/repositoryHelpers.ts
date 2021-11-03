@@ -1,14 +1,4 @@
-import { Connection, Repository } from 'typeorm';
-
-// TODO: Probably okay to delete this method if we replace all occurrences with clearAllTables()
-export const truncateAndResetAutoIncrement = async (repository: Repository<any>, tableName: string) => {
-  // Clear out all rows
-  await repository.createQueryBuilder().delete().from(tableName).execute();
-
-  // Reset auto-increment counter
-  await repository.createQueryBuilder().update('sqlite_sequence').where({ name: repository.metadata.name.toLowerCase() }).set({ seq: 0 })
-    .execute();
-};
+import { Connection } from 'typeorm';
 
 export const clearAllTables = async (connection: Connection) => {
   const entityMetadatas = connection.entityMetadatas.map((entityMetadata) => entityMetadata);
