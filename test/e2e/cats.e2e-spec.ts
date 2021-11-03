@@ -8,25 +8,18 @@ import { Cat } from '../../src/cats/entities/cat.entity';
 import { clearAllTables } from '../helpers/repositoryHelpers';
 import { AppModule } from '../../src/app/app.module';
 import { createTestUser, testUserEmail, testUserPassword } from '../helpers/authenticationHelpers';
+import {
+  buildSampleCat, buildSampleCats, sampleCatOptions, catToPojoWithoutUser,
+} from '../helpers/catHelpers';
+import { UsersService } from '../../src/users/providers/users.service';
 import { User } from '../../src/users/entities/user.entity';
 
 describe('Cats', () => {
   let app: INestApplication;
   let catsService: CatsService;
   let catRepository: Repository<Cat>;
-  let userRepository: Repository<User>;
-
-  const sampleCatOptions = [
-    {
-      id: 1, name: 'Dasher', weight: 10, breed: 'Reindeer', isFriendly: true,
-    },
-    {
-      id: 2, name: 'Dancer', weight: 10, breed: 'Reindeer', isFriendly: true,
-    },
-    {
-      id: 3, name: 'Prancer', weight: 10, breed: 'Reindeer', isFriendly: false,
-    },
-  ];
+  let user: User;
+  let usersService: UsersService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -35,7 +28,7 @@ describe('Cats', () => {
 
     catsService = moduleRef.get<CatsService>(CatsService);
     catRepository = moduleRef.get<Repository<Cat>>(getRepositoryToken(Cat));
-    userRepository = moduleRef.get<Repository<User>>(getRepositoryToken(User));
+    usersService = moduleRef.get<UsersService>(UsersService);
     app = moduleRef.createNestApplication();
     await app.init();
   });
@@ -46,20 +39,20 @@ describe('Cats', () => {
 
   beforeEach(async () => {
     await clearAllTables(catRepository.manager.connection);
-    await createTestUser(userRepository);
+    user = await createTestUser(usersService);
   });
 
   describe('GET /cats', () => {
     let cats: Cat[];
     beforeEach(async () => {
-      const catSavePromises = sampleCatOptions.map((catOptions) => {
-        return catsService.save(new Cat(catOptions));
+      const catSavePromises = buildSampleCats(user).map((cat) => {
+        return catsService.create(cat);
       });
       cats = await Promise.all(catSavePromises);
     });
 
     it('returns the expected status and response body', () => {
-      const expectedResponse = cats.map((c) => ({ ...c }));
+      const expectedResponse = cats.map(catToPojoWithoutUser);
       expectedResponse.sort((a, b) => a.id - b.id);
       return request(app.getHttpServer())
         .get('/cats')
@@ -72,7 +65,7 @@ describe('Cats', () => {
   describe('GET /cats/:id', () => {
     let cat: Cat;
     beforeEach(async () => {
-      cat = await catsService.save(new Cat(sampleCatOptions[0]));
+      cat = await catsService.create(buildSampleCat(user));
     });
 
     it('returns the expected cat', async () => {
@@ -80,7 +73,7 @@ describe('Cats', () => {
         .get(`/cats/${cat.id}`)
         .auth(testUserEmail, testUserPassword)
         .expect(HttpStatus.OK)
-        .expect({ ...cat });
+        .expect(catToPojoWithoutUser(cat));
     });
   });
 
@@ -88,7 +81,7 @@ describe('Cats', () => {
     let cat: Cat;
 
     beforeEach(async () => {
-      cat = await catsService.save(new Cat(sampleCatOptions[0]));
+      cat = await catsService.create(buildSampleCat(user));
       jest.spyOn(catsService, 'findRandomId').mockImplementation(() => Promise.resolve(cat.id));
     });
 
@@ -116,32 +109,13 @@ describe('Cats', () => {
     });
   });
 
-  describe('PUT /cats/:id', () => {
-    let cat: Cat;
-    const replacementProperties = {
-      name: 'Cat-man Dude', breed: 'Half-Man Half-Cat', weight: 170, isFriendly: true,
-    };
-    beforeEach(async () => {
-      cat = await catsService.save(new Cat(sampleCatOptions[0]));
-    });
-
-    it('updates a cat and returns the expected result', () => {
-      return request(app.getHttpServer())
-        .put(`/cats/${cat.id}`)
-        .auth(testUserEmail, testUserPassword)
-        .send(replacementProperties)
-        .expect(HttpStatus.OK)
-        .expect({ ...replacementProperties, id: cat.id });
-    });
-  });
-
   describe('PATCH /cats/:id', () => {
     let cat: Cat;
     const replacementProperties = {
       name: 'Cat-man Dude', breed: 'Half-Man Half-Cat',
     };
     beforeEach(async () => {
-      cat = await catsService.save(new Cat(sampleCatOptions[0]));
+      cat = await catsService.create(buildSampleCat(user));
     });
 
     it('updates a cat and returns the expected result', () => {
@@ -150,14 +124,14 @@ describe('Cats', () => {
         .auth(testUserEmail, testUserPassword)
         .send(replacementProperties)
         .expect(HttpStatus.OK)
-        .expect({ ...cat, ...replacementProperties });
+        .expect({ ...catToPojoWithoutUser(cat), ...replacementProperties });
     });
   });
 
   describe('DELETE /cats/:id', () => {
     let cat: Cat;
     beforeEach(async () => {
-      cat = await catsService.save(new Cat(sampleCatOptions[0]));
+      cat = await catsService.create(buildSampleCat(user));
     });
 
     it('deletes a cat and returns the expected response', async () => {
@@ -175,8 +149,8 @@ describe('Cats', () => {
 
   describe('DELETE /cats', () => {
     beforeEach(async () => {
-      const catSavePromises = sampleCatOptions.map((catOptions) => {
-        return catsService.save(new Cat(catOptions));
+      const catSavePromises = buildSampleCats(user).map((cat) => {
+        return catsService.create(cat);
       });
       await Promise.all(catSavePromises);
     });

@@ -5,7 +5,7 @@ import {
   IsEmail, IsNotEmpty, IsString, Length, MaxLength, validate,
 } from 'class-validator';
 import {
-  BeforeInsert, BeforeUpdate, Column, Entity, Index, ObjectIdColumn, OneToMany, PrimaryGeneratedColumn,
+  Column, Entity, Index, ObjectIdColumn, OneToMany, PrimaryGeneratedColumn,
 } from 'typeorm';
 import { InvalidEntityException } from '../../app/exceptions/invalid-entity.exception';
 // eslint-disable-next-line import/no-cycle
@@ -20,8 +20,6 @@ export interface UserOptions {
 
 @Entity()
 export class User {
-  @BeforeInsert()
-  @BeforeUpdate()
   async validateInstance() {
     const validationErrors = await validate(this);
     if (validationErrors.length) {
@@ -58,8 +56,8 @@ export class User {
   @IsNotEmpty()
   isAdmin: boolean;
 
-  @OneToMany(() => Cat, (cat) => cat.user)
-  cats: Promise<Cat[]>;
+  @OneToMany(() => Cat, (cat) => cat.user, { cascade: true })
+  cats: Cat[];
 
   setPassword(password: string, passwordVerification: string) {
     if (password !== passwordVerification) {

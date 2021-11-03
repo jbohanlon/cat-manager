@@ -3,9 +3,10 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { clearAllTables } from '../../../test/helpers/repositoryHelpers';
-import { generateSampleUsers } from '../../../test/helpers/userHelpers';
+import { buildSampleUser, buildSampleUsers } from '../../../test/helpers/userHelpers';
 import { AppModule } from '../../app/app.module';
 import { InvalidEntityException } from '../../app/exceptions/invalid-entity.exception';
+import { EntityCreationError, EntityUpdateError } from '../../errors/errors';
 import { User } from '../entities/user.entity';
 import { UsersService } from './users.service';
 
@@ -32,14 +33,14 @@ describe('UsersService', () => {
 
   beforeEach(async () => {
     await clearAllTables(userRepository.manager.connection);
-    sampleUsers = generateSampleUsers();
+    sampleUsers = buildSampleUsers();
   });
 
   describe('#findAll', () => {
-    let userSavePromises;
+    let userSavePromises: Promise<User>[];
     beforeEach(async () => {
       userSavePromises = sampleUsers.map((user) => {
-        return usersService.save(user);
+        return usersService.create(user);
       });
       await Promise.all(userSavePromises);
     });
@@ -50,9 +51,9 @@ describe('UsersService', () => {
   });
 
   describe('#find', () => {
-    let user;
+    let user: User;
     beforeEach(async () => {
-      user = await usersService.save(sampleUsers[0]);
+      user = await usersService.create(buildSampleUser());
     });
 
     it('finds the expected user', async () => {
@@ -61,9 +62,9 @@ describe('UsersService', () => {
   });
 
   describe('#findByEmail', () => {
-    let user;
+    let user: User;
     beforeEach(async () => {
-      user = await usersService.save(sampleUsers[0]);
+      user = await usersService.create(buildSampleUser());
     });
 
     it('finds the expected user', async () => {
@@ -72,9 +73,9 @@ describe('UsersService', () => {
   });
 
   describe('#exists', () => {
-    let user;
+    let user: User;
     beforeEach(async () => {
-      user = await usersService.save(sampleUsers[0]);
+      user = await usersService.create(buildSampleUser());
     });
 
     it('returns true for an existing user', async () => {
@@ -86,23 +87,67 @@ describe('UsersService', () => {
     });
   });
 
-  describe('#save', () => {
+  describe('#create', () => {
     it('creates the expected user', async () => {
-      const user = await usersService.save(sampleUsers[0]);
+      const user = await usersService.create(buildSampleUser());
       expect(await usersService.find(user.id)).toEqual(user);
     });
 
-    it('throws an error when invalid data is passed to save', async () => {
-      expect.assertions(1);
-      const invalidUser = new User();
-      await expect(usersService.save(invalidUser)).rejects.toThrow(InvalidEntityException);
+    it('calls validateInstance', async () => {
+      const user = buildSampleUser();
+      jest.spyOn(user, 'validateInstance');
+      await usersService.create(user);
+      expect(user.validateInstance).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws an error when invalid data is provided', async () => {
+      const user = buildSampleUser();
+      user.email = undefined;
+      await expect(usersService.create(user)).rejects.toThrow(InvalidEntityException);
+    });
+
+    it('throws an error when a User with an id is provided', async () => {
+      const user = await usersService.create(buildSampleUser());
+      user.id = 10;
+      await expect(usersService.create(user)).rejects.toThrow(EntityCreationError);
+    });
+  });
+
+  describe('#update', () => {
+    let user: User;
+    beforeEach(async () => {
+      user = await usersService.create(buildSampleUser());
+    });
+
+    it('updates the expected user', async () => {
+      user.email = 'changed@example.com';
+      await usersService.update(user);
+
+      expect(await usersService.find(user.id)).toEqual(user);
+    });
+
+    it('calls validateInstance', async () => {
+      jest.spyOn(user, 'validateInstance');
+      user.isAdmin = true;
+      await usersService.update(user);
+      expect(user.validateInstance).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws an error when invalid data is provided', async () => {
+      user.email = undefined;
+      await expect(usersService.update(user)).rejects.toThrow(InvalidEntityException);
+    });
+
+    it('throws an error when a User without an id is provided', async () => {
+      user.id = undefined;
+      await expect(usersService.update(user)).rejects.toThrow(EntityUpdateError);
     });
   });
 
   describe('#delete', () => {
-    let user;
+    let user: User;
     beforeEach(async () => {
-      user = await usersService.save(sampleUsers[0]);
+      user = await usersService.create(buildSampleUser());
     });
 
     it('deletes a user', async () => {
@@ -113,10 +158,9 @@ describe('UsersService', () => {
   });
 
   describe('#deleteAll', () => {
-    let userSavePromises;
     beforeEach(async () => {
-      userSavePromises = sampleUsers.map((user) => {
-        return usersService.save(user);
+      const userSavePromises = sampleUsers.map((user) => {
+        return usersService.create(user);
       });
       await Promise.all(userSavePromises);
     });

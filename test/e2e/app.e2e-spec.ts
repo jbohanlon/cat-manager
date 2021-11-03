@@ -7,10 +7,12 @@ import { AppModule } from '../../src/app/app.module';
 import { createTestUser, testUserEmail, testUserPassword } from '../helpers/authenticationHelpers';
 import { clearAllTables } from '../helpers/repositoryHelpers';
 import { User } from '../../src/users/entities/user.entity';
+import { UsersService } from '../../src/users/providers/users.service';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
   let userRepository: Repository<User>;
+  let usersService: UsersService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -21,11 +23,12 @@ describe('AppController (e2e)', () => {
     await app.init();
 
     userRepository = moduleRef.get<Repository<User>>(getRepositoryToken(User));
+    usersService = moduleRef.get<UsersService>(UsersService);
   });
 
   beforeEach(async () => {
     await clearAllTables(userRepository.manager.connection);
-    await createTestUser(userRepository);
+    await createTestUser(usersService);
   });
 
   it('/ (GET)', () => {

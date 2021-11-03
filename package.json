@@ -34,7 +34,7 @@
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
     "sqlite3": "^5.0.2",
-    "typeorm": "^0.2.37",
+    "typeorm": "^0.2.38",
     "uuid": ">=7"
   },
   "dependenciesComments": {

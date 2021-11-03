@@ -2,7 +2,7 @@ import {
   IsBoolean, IsInt, IsNotEmpty, IsPositive, IsString, MaxLength, validate,
 } from 'class-validator';
 import {
-  Entity, Column, PrimaryGeneratedColumn, ObjectIdColumn, BeforeInsert, BeforeUpdate, ManyToOne,
+  Entity, Column, PrimaryGeneratedColumn, ManyToOne,
 } from 'typeorm';
 import { InvalidEntityException } from '../../app/exceptions/invalid-entity.exception';
 // eslint-disable-next-line import/no-cycle
@@ -18,8 +18,6 @@ interface CatOptions {
 
 @Entity()
 export class Cat {
-  @BeforeInsert()
-  @BeforeUpdate()
   async validateInstance() {
     const validationErrors = await validate(this);
     if (validationErrors.length) {
@@ -32,7 +30,6 @@ export class Cat {
     Object.keys(options).forEach((key) => { this[key] = options[key]; });
   }
 
-  @ObjectIdColumn()
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -59,6 +56,6 @@ export class Cat {
   @IsNotEmpty()
   isFriendly: boolean;
 
-  @ManyToOne(() => User, (user) => user.cats)
-  user: Promise<User>;
+  @ManyToOne(() => User, (user) => user.cats, { nullable: false, onDelete: 'CASCADE' })
+  user: User;
 }
