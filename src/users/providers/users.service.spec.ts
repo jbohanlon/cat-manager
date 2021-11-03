@@ -165,9 +165,9 @@ describe('UsersService', () => {
       await Promise.all(userSavePromises);
     });
 
-    it('deletes all user', async () => {
+    it('deletes all users', async () => {
       expect((await usersService.findAll()).length).toBeGreaterThan(2); // ensure we're deleting more than one user
-      usersService.deleteAll();
+      await usersService.deleteAll();
       expect((await usersService.findAll())).toHaveLength(0);
     });
   });

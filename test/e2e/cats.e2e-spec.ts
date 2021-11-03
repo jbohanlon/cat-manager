@@ -7,9 +7,12 @@ import { CatsService } from '../../src/cats/providers/cats.service';
 import { Cat } from '../../src/cats/entities/cat.entity';
 import { clearAllTables } from '../helpers/repositoryHelpers';
 import { AppModule } from '../../src/app/app.module';
-import { createTestUser, testUserEmail, testUserPassword } from '../helpers/authenticationHelpers';
 import {
-  buildSampleCat, buildSampleCats, sampleCatOptions, catToPojoWithoutUser,
+  createTestAdmin,
+  createTestUser, testAdminEmail, testAdminPassword, testUserEmail, testUserPassword,
+} from '../helpers/authenticationHelpers';
+import {
+  buildSampleCat, buildSampleCats, catToPojoWithoutUser,
 } from '../helpers/catHelpers';
 import { UsersService } from '../../src/users/providers/users.service';
 import { User } from '../../src/users/entities/user.entity';
@@ -155,12 +158,25 @@ describe('Cats', () => {
       await Promise.all(catSavePromises);
     });
 
-    it('deletes a cat and returns the expected response', async () => {
-      expect((await catsService.findAll())).toHaveLength(sampleCatOptions.length);
+    it('rejects unauthorized requests from non-admins and returns the expected response', async () => {
+      const initialNumCats = (await catsService.findAll()).length;
+      expect(initialNumCats > 0).toBe(true);
 
       await request(app.getHttpServer())
         .delete('/cats')
         .auth(testUserEmail, testUserPassword)
+        .expect(HttpStatus.FORBIDDEN);
+
+      expect((await catsService.findAll())).toHaveLength(initialNumCats);
+    });
+
+    it('allows an admin to delete all cats and returns the expected response', async () => {
+      expect((await catsService.findAll()).length > 0).toBe(true);
+      await createTestAdmin(usersService);
+
+      await request(app.getHttpServer())
+        .delete('/cats')
+        .auth(testAdminEmail, testAdminPassword)
         .expect(HttpStatus.NO_CONTENT)
         .expect(''); // No response body
 

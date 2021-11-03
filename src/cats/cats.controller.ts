@@ -1,7 +1,8 @@
 import {
-  Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Patch, Post, Redirect, Req,
+  Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Patch, Post, Redirect, Req, UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { AdminGuard } from '../users/guards/admin.guard';
 import { CreateCatDto } from './dto/create-cat.dto';
 import { UpdateCatDto } from './dto/update-cat.dto';
 import { Cat } from './entities/cat.entity';
@@ -61,6 +62,7 @@ export class CatsController {
   }
 
   @Delete()
+  @UseGuards(AdminGuard)
   @HttpCode(204)
   async deleteAll(): Promise<void> {
     this.catsService.deleteAll();
