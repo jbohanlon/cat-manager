@@ -1,7 +1,7 @@
 import {
   MiddlewareConsumer, Module, NestModule, ValidationPipe,
 } from '@nestjs/common';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -9,6 +9,7 @@ import { CatsModule } from '../cats/cats.module';
 import { UsersModule } from '../users/users.module';
 import { AuthenticationMiddleware } from './middleware/authentication.middleware';
 import { ensureValidNodeEnv, loadDbConfig } from '../helpers/configHelpers';
+import { AuthenticationGuard } from './guards/authentication.guard';
 
 ensureValidNodeEnv();
 
@@ -24,6 +25,10 @@ ensureValidNodeEnv();
     {
       provide: APP_PIPE,
       useValue: new ValidationPipe({ whitelist: true, transform: true }),
+    },
+    {
+      provide: APP_GUARD,
+      useValue: AuthenticationGuard,
     },
   ],
 })
