@@ -6,6 +6,7 @@ import { AdminGuard } from '../users/guards/admin.guard';
 import { CreateCatDto } from './dto/create-cat.dto';
 import { UpdateCatDto } from './dto/update-cat.dto';
 import { Cat } from './entities/cat.entity';
+import { requireCatOwnerOrAdmin } from './catsControllerHelpers';
 import { CatsService } from './providers/cats.service';
 
 @Controller('cats')
@@ -45,18 +46,30 @@ export class CatsController {
   }
 
   @Patch(':id')
-  async patch(@Param('id') id: number, @Body() dto: UpdateCatDto): Promise<Cat> {
-    const cat: Cat = await this.find(id);
+  async patch(@Param('id') id: number, @Body() dto: UpdateCatDto, @Req() req: Request): Promise<Cat> {
+    const cat: Cat = await this.catsService.find(id, true);
+    if (!cat) {
+      throw new HttpException('Not found', HttpStatus.NOT_FOUND);
+    }
+    requireCatOwnerOrAdmin((req as any).user, cat);
+
+    delete cat.user;
     Object.assign(cat, dto);
     return this.catsService.update(cat);
   }
 
   @Delete(':id')
   @HttpCode(204)
-  async delete(@Param('id') id: number): Promise<void> {
+  async delete(@Param('id') id: number, @Req() req: Request): Promise<void> {
     if (!(await this.catsService.exists(id))) {
       throw new HttpException('Not found', HttpStatus.NOT_FOUND);
     }
+
+    const cat: Cat = await this.catsService.find(id, true);
+    if (!cat) {
+      throw new HttpException('Not found', HttpStatus.NOT_FOUND);
+    }
+    requireCatOwnerOrAdmin((req as any).user, cat);
 
     this.catsService.delete(id);
   }

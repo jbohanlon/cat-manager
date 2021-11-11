@@ -8,8 +8,9 @@ import { Cat } from '../../src/cats/entities/cat.entity';
 import { clearAllTables } from '../helpers/repositoryHelpers';
 import { AppModule } from '../../src/app/app.module';
 import {
+  createSecondTestUser,
   createTestAdmin,
-  createTestUser, testAdminEmail, testAdminPassword, testUserEmail, testUserPassword,
+  createTestUser, secondTestUserEmail, secondTestUserPassword, testAdminEmail, testAdminPassword, testUserEmail, testUserPassword,
 } from '../helpers/authenticationHelpers';
 import {
   buildSampleCat, buildSampleCats, catToPojoWithoutUser,
@@ -117,17 +118,41 @@ describe('Cats', () => {
     const replacementProperties = {
       name: 'Cat-man Dude', breed: 'Half-Man Half-Cat',
     };
+    let expectedSuccessfulPatchResponse: any;
+
     beforeEach(async () => {
       cat = await catsService.create(buildSampleCat(user));
+      expectedSuccessfulPatchResponse = { ...catToPojoWithoutUser(cat), ...replacementProperties };
     });
 
-    it('updates a cat and returns the expected result', () => {
+    it('updates the Cat and returns the expected result when the requesting User is the Cat owner', () => {
       return request(app.getHttpServer())
         .patch(`/cats/${cat.id}`)
         .auth(testUserEmail, testUserPassword)
         .send(replacementProperties)
         .expect(HttpStatus.OK)
-        .expect({ ...catToPojoWithoutUser(cat), ...replacementProperties });
+        .expect(expectedSuccessfulPatchResponse);
+    });
+
+    it('updates the Cat and returns the expected result when the requesting User is not the Cat owner but is an admin', async () => {
+      await createTestAdmin(usersService);
+
+      return request(app.getHttpServer())
+        .patch(`/cats/${cat.id}`)
+        .auth(testAdminEmail, testAdminPassword)
+        .send(replacementProperties)
+        .expect(HttpStatus.OK)
+        .expect(expectedSuccessfulPatchResponse);
+    });
+
+    it('returns the expected error status when the requesting User is not the Cat owner and not an admin', async () => {
+      await createSecondTestUser(usersService);
+
+      return request(app.getHttpServer())
+        .patch(`/cats/${cat.id}`)
+        .auth(secondTestUserEmail, secondTestUserPassword)
+        .send(replacementProperties)
+        .expect(HttpStatus.FORBIDDEN);
     });
   });
 
@@ -137,7 +162,7 @@ describe('Cats', () => {
       cat = await catsService.create(buildSampleCat(user));
     });
 
-    it('deletes a cat and returns the expected response', async () => {
+    it('deletes the Cat and returns the expected response when the requesting User is the Cat owner', async () => {
       expect((await catsService.findAll())).toHaveLength(1);
 
       await request(app.getHttpServer())
@@ -147,6 +172,31 @@ describe('Cats', () => {
         .expect(''); // No response body
 
       expect((await catsService.findAll())).toHaveLength(0);
+    });
+
+    it('deletes the Cat and returns the expected result when the requesting User is not the Cat owner but is an admin', async () => {
+      expect((await catsService.findAll())).toHaveLength(1);
+      await createTestAdmin(usersService);
+
+      await request(app.getHttpServer())
+        .delete(`/cats/${cat.id}`)
+        .auth(testAdminEmail, testAdminPassword)
+        .expect(HttpStatus.NO_CONTENT)
+        .expect(''); // No response body
+
+      expect((await catsService.findAll())).toHaveLength(0);
+    });
+
+    it('returns the expected error status when the requesting User is not the Cat owner and not an admin', async () => {
+      expect((await catsService.findAll())).toHaveLength(1);
+      await createSecondTestUser(usersService);
+
+      await request(app.getHttpServer())
+        .delete(`/cats/${cat.id}`)
+        .auth(secondTestUserEmail, secondTestUserPassword)
+        .expect(HttpStatus.FORBIDDEN);
+
+      expect((await catsService.findAll())).toHaveLength(1);
     });
   });
 
