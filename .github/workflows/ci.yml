@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{matrix.node}}
-      - run: cp config/database.template.yml config/database.yml
+      - run: cp config/ormconfig.template.yml config/ormconfig.yml
       - run: npm ci
       - name: Run core tests
         run: npm run test
@@ -29,7 +29,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{matrix.node}}
-      - run: cp config/database.template.yml config/database.yml
+      - run: cp config/ormconfig.template.yml config/ormconfig.yml
       - run: npm ci
       - name: Run end-to-end tests
         run: npm run test:e2e

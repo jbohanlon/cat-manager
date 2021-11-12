@@ -5,10 +5,10 @@ An app for managing a vast collection of cats!
 
 ## Installation and first-time setup
 
-Clone the repository, enter the repository directory, and then create a new database.yml file from the template source:
+Clone the repository, enter the repository directory, and then create a new ormconfig.yml file from the template source:
 
 ```bash
-$ cp config/database.template.yml config/database.yml
+$ cp config/ormconfig.template.yml config/ormconfig.yml
 ```
 
 Then run:

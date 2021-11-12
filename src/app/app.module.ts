@@ -8,14 +8,14 @@ import { AppService } from './app.service';
 import { CatsModule } from '../cats/cats.module';
 import { UsersModule } from '../users/users.module';
 import { AuthenticationMiddleware } from './middleware/authentication.middleware';
-import { ensureValidNodeEnv, loadDbConfig } from '../helpers/configHelpers';
+import { ensureValidNodeEnv, loadOrmConfig } from '../helpers/configHelpers';
 import { AuthenticationGuard } from './guards/authentication.guard';
 
 ensureValidNodeEnv();
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot(loadDbConfig(process.env.NODE_ENV)),
+    TypeOrmModule.forRoot(loadOrmConfig(process.env.NODE_ENV)),
     CatsModule,
     UsersModule,
   ],
