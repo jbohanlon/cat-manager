@@ -1,14 +1,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
-import { Cat } from '../cats/entities/cat.entity';
-import { User } from '../users/entities/user.entity';
 
 export const loadOrmConfig = (nodeEnv: string) => {
   const fileContent = fs.readFileSync(path.resolve('./config/ormconfig.yml'), 'utf8');
   const dbConfig = yaml.load(fileContent) as Record<string, any>;
   const envDbConfig = dbConfig[nodeEnv];
-  envDbConfig.entities = [Cat, User];
 
   return envDbConfig;
 };

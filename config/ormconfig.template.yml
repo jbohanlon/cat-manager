@@ -1,13 +1,20 @@
 default: &default
   type: sqlite
-  synchronize: false # to be safe, default to false
+  synchronize: false
+  entities:
+    - src/cats/entities/cat.entity.ts
+    - src/users/entities/user.entity.ts
+  migrations:
+    - src/migrations/*.ts
+  cli:
+    migrationsDir: src/migrations
 
 development:
   <<: *default
-  database: db/development.sqlite3
   synchronize: true
+  database: db/development.sqlite3
 
 test:
   <<: *default
-  database: db/test.sqlite3
   synchronize: true
+  database: db/test.sqlite3
