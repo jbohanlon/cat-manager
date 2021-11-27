@@ -11,4 +11,7 @@ if (configForEnv === undefined) {
   throw new Error(`Invalid NODE_ENV: ${nodeEnv}`);
 }
 
+// eslint-disable-next-line no-console
+console.log(`Running in environment: ${nodeEnv}`);
+
 export default configForEnv;

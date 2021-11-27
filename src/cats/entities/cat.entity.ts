@@ -39,7 +39,7 @@ export class Cat {
   @IsNotEmpty()
   name: string;
 
-  @Column('int')
+  @Column('integer')
   @IsPositive()
   @IsInt()
   @IsNotEmpty()
