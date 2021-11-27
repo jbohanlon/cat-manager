@@ -2,7 +2,7 @@ import { Optional } from '@nestjs/common';
 import { Allow } from 'class-validator';
 import { MatchesOtherPropertyValue } from '../../custom-validator-decorators/MatchesOtherPropertyValue';
 
-export class BaseUserDto {
+export abstract class BaseUserDto {
   @Allow()
   email: string;
 

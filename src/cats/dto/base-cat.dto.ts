@@ -1,7 +1,7 @@
 import { Transform } from 'class-transformer';
 import { Allow } from 'class-validator';
 
-export class BaseCatDto {
+export abstract class BaseCatDto {
   @Allow()
   name: string;
 
