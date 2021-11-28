@@ -1,5 +1,7 @@
+/* eslint-disable new-cap */
 /* eslint-disable jest/no-export */
 import { plainToClass } from 'class-transformer';
+import { validate } from 'class-validator';
 import { BaseCatDto } from './base-cat.dto';
 
 // Note that `new () => BaseCatDto` below is the same as doing `typeof CreateCatDto | typeof UpdateCatDto`,
@@ -42,6 +44,28 @@ export const itBehavesLikeABaseCatDto = (transformationClass: new () => BaseCatD
             expect(obj.isFriendly).toBe(output);
           });
         });
+      });
+    });
+
+    describe('validation with class-validator', () => {
+      const validatorOptions = { whitelist: true };
+
+      let dto: BaseCatDto;
+      beforeEach(() => {
+        dto = new transformationClass();
+      });
+
+      it('whitelists desired properties', async () => {
+        const expectedProperties = {
+          name: 'Sample von Cattington',
+          weight: 12,
+          breed: 'Exemplary',
+          isFriendly: true,
+        };
+
+        Object.assign(dto, expectedProperties, { extra: 'banana' });
+        await validate(dto, validatorOptions);
+        expect((dto as any).extra).toBeUndefined();
       });
     });
   });
