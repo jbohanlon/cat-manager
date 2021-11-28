@@ -4,7 +4,8 @@ const MIN_PASSWORD_LENGTH = 10;
 
 export function IsValidPassword(passwordIsRequired: boolean) {
   const validationOptions: ValidationOptions = {
-    message: `A password is required and it must be at least ${MIN_PASSWORD_LENGTH} characters.`,
+    message: `${passwordIsRequired ? 'A password is required and it' : 'The provided password'
+    } must be at least ${MIN_PASSWORD_LENGTH} characters.`,
   };
 
   return function (object: Object, propertyName: string) {
