@@ -9,3 +9,4 @@ export class CatManagerError extends Error {
 
 export class EntityCreationError extends CatManagerError {}
 export class EntityUpdateError extends CatManagerError {}
+export class PasswordMismatchError extends CatManagerError {}

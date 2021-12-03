@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { buildSampleCat } from '../../../test/helpers/catHelpers';
 import { clearAllTables } from '../../../test/helpers/repositoryHelpers';
 import { buildSampleUser, buildSampleUsers } from '../../../test/helpers/userHelpers';
 import { AppModule } from '../../app/app.module';
@@ -37,38 +38,59 @@ describe('UsersService', () => {
   });
 
   describe('#findAll', () => {
-    let userSavePromises: Promise<User>[];
+    let expectedUsers: User[];
     beforeEach(async () => {
-      userSavePromises = sampleUsers.map((user) => {
+      const userSavePromises = sampleUsers.map((user) => {
+        user.cats = [buildSampleCat()];
         return usersService.create(user);
       });
-      await Promise.all(userSavePromises);
+      expectedUsers = await Promise.all(userSavePromises);
+      expectedUsers.sort((a, b) => a.id - b.id);
     });
 
-    it('finds the expected number of users', async () => {
-      expect(await usersService.findAll()).toHaveLength(userSavePromises.length);
+    it('with includeCats=false (the default param value), finds the expected users (without cats)', async () => {
+      expectedUsers.forEach((user) => delete user.cats);
+      expect(await usersService.findAll()).toEqual(expectedUsers);
+    });
+
+    it('with includeCats=true, finds the expected users (with cats)', async () => {
+      expect(await usersService.findAll(true)).toEqual(expectedUsers);
     });
   });
 
   describe('#find', () => {
     let user: User;
     beforeEach(async () => {
-      user = await usersService.create(buildSampleUser());
+      user = buildSampleUser();
+      user.cats = [buildSampleCat()];
+      await usersService.create(user);
     });
 
-    it('finds the expected user', async () => {
+    it('with includeCats=false (the default param value), finds the expected user (without cats)', async () => {
+      delete user.cats;
       expect(await usersService.find(user.id)).toEqual(user);
+    });
+
+    it('with includeCats=true, finds the expected user (with cats)', async () => {
+      expect(await usersService.find(user.id, true)).toEqual(user);
     });
   });
 
   describe('#findByEmail', () => {
     let user: User;
     beforeEach(async () => {
-      user = await usersService.create(buildSampleUser());
+      user = buildSampleUser();
+      user.cats = [buildSampleCat()];
+      await usersService.create(user);
     });
 
-    it('finds the expected user', async () => {
+    it('with includeCats=false (the default param value), finds the expected user (without cats)', async () => {
+      delete user.cats;
       expect(await usersService.findByEmail(user.email)).toEqual(user);
+    });
+
+    it('with includeCats=true, finds the expected user (with cats)', async () => {
+      expect(await usersService.findByEmail(user.email, true)).toEqual(user);
     });
   });
 
@@ -152,7 +174,7 @@ describe('UsersService', () => {
 
     it('deletes a user', async () => {
       expect(await usersService.exists(user.id)).toBe(true);
-      usersService.delete(user.id);
+      await usersService.delete(user.id);
       expect(await usersService.exists(user.id)).toBe(false);
     });
   });

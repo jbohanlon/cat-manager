@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { EntityCreationError, EntityUpdateError } from '../../errors/errors';
 import { Cat } from '../entities/cat.entity';
 
@@ -49,10 +49,12 @@ export class CatsService {
     await this.catRepository.clear();
   }
 
-  async findRandomId(): Promise<number> {
+  generateRandomCatQueryBuilder(): SelectQueryBuilder<Cat> {
     // Note: The RANDOM() function only works with sqlite
-    const builtQuery = this.catRepository.createQueryBuilder().select(['id']).orderBy('RANDOM()');
-    const randomId = (await builtQuery.getRawOne()).id;
-    return randomId;
+    return this.catRepository.createQueryBuilder().select(['id']).orderBy('RANDOM()');
+  }
+
+  async findRandomId(): Promise<number> {
+    return (await this.generateRandomCatQueryBuilder().getRawOne()).id;
   }
 }

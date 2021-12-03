@@ -11,6 +11,7 @@ import { AppModule } from '../../app/app.module';
 import { InvalidEntityException } from '../../app/exceptions/invalid-entity.exception';
 import { Cat } from '../../cats/entities/cat.entity';
 import { CatsService } from '../../cats/providers/cats.service';
+import { PasswordMismatchError } from '../../errors/errors';
 import { UsersService } from '../providers/users.service';
 import { User } from './user.entity';
 
@@ -68,8 +69,11 @@ describe('User', () => {
 
     it('sets encryptedPassword to the expected value', () => {
       user.setPassword(samplePassword, samplePassword);
-
       expect(user.encryptedPassword).toEqual(sampleEncryptedPassword);
+    });
+
+    it('throws an error when password and passwordVerification do not match', () => {
+      expect(() => { user.setPassword(samplePassword, `not-${samplePassword}`); }).toThrow(PasswordMismatchError);
     });
   });
 

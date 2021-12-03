@@ -10,6 +10,7 @@ import {
 import { InvalidEntityException } from '../../app/exceptions/invalid-entity.exception';
 // eslint-disable-next-line import/no-cycle
 import { Cat } from '../../cats/entities/cat.entity';
+import { PasswordMismatchError } from '../../errors/errors';
 
 export interface UserOptions {
   id?: number,
@@ -61,7 +62,7 @@ export class User {
 
   setPassword(password: string, passwordVerification: string) {
     if (password !== passwordVerification) {
-      throw new Error('Password does not match verification password');
+      throw new PasswordMismatchError('Password does not match verification password');
     }
     const salt = bcrypt.genSaltSync(10);
     this.encryptedPassword = bcrypt.hashSync(password, salt);
